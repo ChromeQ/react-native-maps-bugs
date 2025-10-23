@@ -1,6 +1,6 @@
 import { Image } from "@rneui/themed";
-import { useMemo } from "react";
-import { /*Image as RNImage,*/ StyleSheet, View } from "react-native";
+import { useEffect, useMemo, useRef } from "react";
+import { /*Image as RNImage,*/ Animated, StyleSheet, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 
 import pinIcon from "@/assets/images/icon.png";
@@ -14,6 +14,25 @@ export default function HomeScreen() {
     longitudeDelta: 0.6,
   };
 
+  const spinValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const spin = () => {
+      spinValue.setValue(0);
+      Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 2000, // 2 seconds for one full rotation
+        useNativeDriver: true,
+      }).start(() => spin()); // Loop the animation
+    };
+    spin();
+  }, [spinValue]);
+
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
+
   const memoPins = useMemo(() => {
     return pins
       .filter((_, i) => i % 8 === 0)
@@ -24,10 +43,10 @@ export default function HomeScreen() {
           tracksViewChanges={true}
         >
           <View style={styles.pinIconWrapper}>
-            <Image
+            <Animated.Image
               source={{ uri: Image.resolveAssetSource(pinIcon).uri }}
               resizeMode="contain"
-              style={styles.pinIcon}
+              style={[styles.pinIcon, { transform: [{ rotate: spin }] }]}
             />
           </View>
         </Marker>
